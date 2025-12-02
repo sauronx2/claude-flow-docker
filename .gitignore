@@ -1,0 +1,16 @@
+# Environment variables
+.env
+
+# Workspace - user projects (optional, depending on your needs)
+workspace/*
+!workspace/.gitkeep
+
+# Docker volumes data
+volumes/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
