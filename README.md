@@ -65,6 +65,22 @@ Claude-Flow requires Node.js 20+, native dependencies (better-sqlite3), and init
 
 ---
 
+## Supported Platforms
+
+Native multi-architecture support (no emulation, full performance):
+
+| Platform | Architecture | Status |
+|----------|--------------|--------|
+| macOS Apple Silicon (M1/M2/M3/M4) | linux/arm64 | ✅ Native |
+| macOS Intel | linux/amd64 | ✅ Native |
+| Linux x86_64 | linux/amd64 | ✅ Native |
+| Linux ARM64 | linux/arm64 | ✅ Native |
+| Windows (WSL2) | linux/amd64 | ✅ Native |
+
+Docker automatically pulls the correct native image for your platform.
+
+---
+
 ## Quick Start
 
 ### 1. Run
@@ -204,7 +220,8 @@ make clean   # Remove all (including data)
 
 | Parameter | Value |
 |-----------|-------|
-| **Base Image** | `node:22-slim` |
+| **Base Image** | `node:22-slim` (multi-arch) |
+| **Architectures** | `linux/amd64`, `linux/arm64` |
 | **Port** | `8080` (SSE) |
 | **Volumes** | `claude-flow-db`, `node-modules-cache` |
 | **Restart** | `unless-stopped` |
