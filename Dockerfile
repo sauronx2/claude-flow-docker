@@ -10,15 +10,18 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Claude-Flow and mcp-proxy globally
-RUN npm install -g claude-flow@alpha
-RUN npm install -g mcp-proxy
+# Install Claude-Flow (latest alpha) and mcp-proxy globally
+RUN npm install -g claude-flow@alpha mcp-proxy
 
 # Initialize Claude-Flow
-RUN npx claude-flow@alpha init --force
+RUN npx claude-flow init --force
+
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Expose SSE port for MCP
 EXPOSE 8080
 
-# Start mcp-proxy that bridges stdio Claude-Flow to SSE
-CMD ["mcp-proxy", "--port", "8080", "npx", "claude-flow@alpha", "mcp", "start"]
+# Use entrypoint for auto-update and logging
+ENTRYPOINT ["/entrypoint.sh"]
