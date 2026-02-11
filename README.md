@@ -62,6 +62,8 @@ Claude-Flow requires Node.js 20+, native dependencies (better-sqlite3), and init
 | **CI/CD** | GitHub Actions auto-publishes to Docker Hub |
 | **Persistence** | Docker volumes preserve memory and learned patterns |
 | **SSE Bridge** | mcp-proxy converts stdio → SSE for Claude Code |
+| **Optimized Size** | Multi-stage build reduces image by 45% (~1.7GB) |
+| **Health Check** | Built-in Docker health check for container monitoring |
 
 ---
 
@@ -220,19 +222,29 @@ make clean   # Remove all (including data)
 
 | Parameter | Value |
 |-----------|-------|
-| **Base Image** | `node:22-slim` (multi-arch) |
+| **Base Image** | `node:22-slim` (multi-arch, multi-stage) |
+| **Image Size** | ~1.7 GB (optimized from ~3 GB) |
 | **Architectures** | `linux/amd64`, `linux/arm64` |
 | **Port** | `8080` (SSE) |
 | **Volumes** | `claude-flow-db`, `node-modules-cache` |
 | **Restart** | `unless-stopped` |
+| **Health Check** | Every 30s on `/sse` endpoint |
+
+### Image Optimization
+
+The Dockerfile uses a multi-stage build to minimize image size:
+
+- **Stage 1 (builder)**: Installs build dependencies (python3, make, g++) and compiles native modules
+- **Stage 2 (runtime)**: Contains only the runtime (no build tools), reducing size by ~45%
 
 ### Project Structure
 
 ```
-├── Dockerfile              # Build with native deps
+├── Dockerfile              # Multi-stage optimized build
 ├── entrypoint.sh           # Auto-update + logging
 ├── docker-compose.yml      # Local build
 ├── docker-compose.hub.yml  # Docker Hub image
+├── .dockerignore           # Build context optimization
 ├── Makefile                # Dev commands
 └── .github/workflows/      # CI/CD
 ```
