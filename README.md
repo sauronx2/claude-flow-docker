@@ -1,181 +1,126 @@
-# Claude Flow Docker
+# Claude-Flow Docker
 
-Docker setup for Claude Flow MCP server - multi-agent orchestration system accessible via Model Context Protocol (MCP).
+[![Docker Hub](https://img.shields.io/docker/v/sauronx2/claude-flow?label=Docker%20Hub&logo=docker)](https://hub.docker.com/r/sauronx2/claude-flow)
+[![Build](https://github.com/sauronx2/claude-flow-docker/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/sauronx2/claude-flow-docker/actions)
 
-## What is This?
+Ready-to-use Docker image for [Claude-Flow](https://github.com/ruvnet/claude-flow) — AI agent orchestration platform for Claude Code.
 
-This project provides a containerized Claude Flow MCP server that enables Claude Code to spawn and orchestrate multiple AI agents in parallel. The server runs in Docker and communicates with Claude Code through SSE (Server-Sent Events) transport.
+## Why this project?
+
+[Claude-Flow](https://github.com/ruvnet/claude-flow) is a powerful multi-agent orchestration system. But installation requires Node.js, native dependencies, and configuration.
+
+**This project solves it:** one command — Claude-Flow works.
+
+```bash
+docker run -d -p 8080:8080 sauronx2/claude-flow
+```
+
+## What this project adds
+
+| Feature | Description |
+|---------|-------------|
+| **Auto-update** | Container checks npm and updates to latest version on every start |
+| **Logging** | Colored logs for key events (start, update, errors) for lazydocker/docker logs |
+| **CI/CD** | GitHub Actions auto-builds and pushes image to Docker Hub on every commit |
+| **Persistence** | Docker volumes preserve data between restarts |
+| **SSE Transport** | mcp-proxy converts stdio to SSE for Claude Code connection |
+
+## Quick Start
+
+### 1. Run container
+
+```bash
+# Single command
+docker run -d --name claude-flow -p 8080:8080 sauronx2/claude-flow:latest
+
+# Or with docker-compose (with persistence)
+curl -sO https://raw.githubusercontent.com/sauronx2/claude-flow-docker/main/docker-compose.hub.yml
+docker compose -f docker-compose.hub.yml up -d
+```
+
+### 2. Connect to Claude Code
+
+```bash
+claude mcp add --transport sse claude-flow http://localhost:8080/sse
+```
+
+### 3. Done
+
+Run `claude` and use 200+ Claude-Flow tools.
+
+## What is Claude-Flow
+
+[Claude-Flow](https://github.com/ruvnet/claude-flow) v3 — enterprise AI agent orchestration platform:
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **60+ agents** | coder, tester, reviewer, architect, security, etc. |
+| **Swarm coordination** | Parallel agent work with consensus (Raft, Byzantine, Gossip) |
+| **Hive-Mind** | Queen-Worker hierarchy for complex tasks |
+| **HNSW Memory** | Vector search 150x-12,500x faster than standard |
+| **Self-Learning** | SONA — agents learn from results (<0.05ms adaptation) |
+| **Multi-LLM** | Claude, GPT, Gemini, Ollama with automatic failover |
+
+### Main MCP Tools
+
+```
+agent_spawn          — create an agent
+swarm_init           — start a swarm
+hive-mind_spawn      — create hive with workers
+memory_store/search  — vector memory
+task_create          — create a task
+hooks_route          — intelligent routing
+```
 
 ## Architecture
 
 ```
-Claude Code (Mac) → SSE → mcp-proxy (Docker) → stdio → Claude Flow MCP
-                                                           ↓
-                                                    Swarm Agents
-                                                           ↓
-                                                  SQLite Database
+Claude Code → SSE:8080 → mcp-proxy → stdio → claude-flow mcp
+                                                    ↓
+                                              ┌─────────────┐
+                                              │ 60+ Agents  │
+                                              │ HNSW Memory │
+                                              │ SQLite DB   │
+                                              └─────────────┘
 ```
 
-### Components
-
-- **Claude Flow MCP Server**: Multi-agent orchestration engine
-- **mcp-proxy**: Bridges SSE transport to stdio for MCP communication
-- **SQLite Database**: Persistent storage for agent decisions, performance metrics, and learned patterns
-- **Node.js 22**: Runtime environment
-
-## Features
-
-- **Multi-Agent Orchestration**: Spawn and coordinate multiple AI agents in parallel
-- **Hive-Mind System**: Queen-Worker architecture for task distribution
-- **Persistent Memory**: SQLite database stores agent sessions, decisions, and patterns
-- **SSE Transport**: Claude Code connects via Server-Sent Events on port 8080
-- **Docker Volumes**: Data persists between container restarts
-
-## Quick Start
-
-### Option A: Use Pre-built Image from Docker Hub (Recommended)
+## Commands (local build)
 
 ```bash
-# Pull and run
-docker run -d --name claude-flow -p 8080:8080 sauronx2/claude-flow:latest
-
-# Or with docker compose
-curl -O https://raw.githubusercontent.com/sauronx2/claude-flow-docker/main/docker-compose.hub.yml
-docker compose -f docker-compose.hub.yml up -d
+make start    # Start container
+make stop     # Stop container
+make logs     # View logs
+make shell    # Enter container
+make clean    # Remove everything (including data)
 ```
 
-### Option B: Build Locally
+## Log Example
 
-```bash
-make start
 ```
-
-This builds the Docker image and starts the Claude Flow MCP server on port 8080.
-
-### 2. Connect Claude Code
-
-Add the MCP server to Claude Code:
-
-```bash
-claude mcp add --transport sse claude-flow --scope user http://localhost:8080/sse
-```
-
-### 3. Verify Connection
-
-```bash
-make status
-```
-
-### 4. Use in Claude Code
-
-Start Claude Code and the MCP tools will be available:
-
-```bash
-claude
-```
-
-Now you can use Claude Flow tools like:
-- `swarm_orchestrate` - Launch parallel agent swarms
-- `spawn_agent` - Create specialized agents
-- `hive_mind_init` - Initialize Queen-Worker hierarchy
-- `memory_store` - Save to persistent database
-
-## Available Commands
-
-```bash
-make start         # Start the container
-make stop          # Stop the container
-make restart       # Restart the container
-make logs          # View container logs
-make status        # Check container status
-make shell         # Enter container shell
-make clean         # Remove container and volumes (deletes data!)
-make build         # Rebuild Docker image
-```
-
-## MCP Tools Available
-
-### Swarm Orchestration
-- `swarm_orchestrate` - Launch parallel agent swarms
-- `spawn_agent` - Create individual agents
-- `swarm_status` - Check swarm status
-
-### Hive-Mind System
-- `hive_mind_init` - Initialize Queen-Worker hierarchy
-- `queen_coordinate` - Queen coordinates Workers
-- `worker_assign` - Assign tasks to Workers
-- `consensus_vote` - Agent voting mechanism
-
-### Memory System
-- `memory_store` - Save to SQLite database
-- `memory_query` - Query stored data
-- `memory_search` - Semantic search in AgentDB
-
-### Performance
-- `performance_metrics` - Agent performance stats
-- `neural_sync` - Synchronize learned patterns
-
-## Data Persistence
-
-All data is stored in Docker volumes:
-
-- `claude-flow-db`: SQLite database with agent sessions, decisions, patterns
-- `node-modules-cache`: npm package cache
-
-Data persists between container restarts. Use `make clean` to completely remove all data.
-
-## Database Schema
-
-The SQLite database (`/.claude-flow/memory.db`) contains:
-
-- `decisions` - Agent decision history
-- `performance_metrics` - Performance stats
-- `learned_patterns` - ML patterns
-- `agent_sessions` - Session history
-- `task_history` - Completed tasks
-- `reasoning_chains` - Reasoning steps
-- `vector_embeddings` - Semantic embeddings (AgentDB)
-
-## Port Configuration
-
-- **8080**: SSE endpoint for MCP communication (`http://localhost:8080/sse`)
-
-## Requirements
-
-- Docker
-- Docker Compose
-- Claude Code
-
-## Troubleshooting
-
-### Container won't start
-```bash
-make logs
-```
-
-### Reset everything
-```bash
-make clean
-make start
-```
-
-### Check if server is running
-```bash
-curl http://localhost:8080/sse
+2026-02-11T13:13:57Z [INFO] ========== Claude-Flow Container Starting ==========
+2026-02-11T13:13:58Z [INFO] Current version: 3.1.0-alpha.28
+2026-02-11T13:13:58Z [INFO] Checking for updates...
+2026-02-11T13:13:59Z [OK] Already on latest version: 3.1.0-alpha.28
+2026-02-11T13:14:01Z [OK] Memory initialized
+2026-02-11T13:14:01Z [OK] ========== Starting MCP Server on port 8080 ==========
 ```
 
 ## Technical Details
 
-- **Base Image**: node:22-slim
-- **Node Modules**: claude-flow@alpha, mcp-proxy
-- **Runtime**: Node.js 22
-- **Database**: SQLite (better-sqlite3)
-- **Transport**: SSE (Server-Sent Events)
-- **Protocol**: MCP (Model Context Protocol)
+| Parameter | Value |
+|-----------|-------|
+| Base Image | `node:22-slim` |
+| Port | `8080` (SSE) |
+| Volumes | `claude-flow-db`, `node-modules-cache` |
+| Restart | `unless-stopped` |
 
-## Documentation
+## Links
 
-For detailed architecture explanation, see [guide.md](./guide.md).
+- **Original project:** https://github.com/ruvnet/claude-flow
+- **Docker Hub:** https://hub.docker.com/r/sauronx2/claude-flow
+- **Claude-Flow docs:** https://github.com/ruvnet/claude-flow#readme
 
 ## License
 
