@@ -51,9 +51,9 @@ RUN chmod +x /entrypoint.sh
 # Expose SSE port for MCP
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/sse || exit 1
+# Health check - use max-time since SSE keeps connection open
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -s --max-time 2 -o /dev/null -w '%{http_code}' http://localhost:8080/sse | grep -q 200 || exit 1
 
 # Use entrypoint for auto-update and logging
 ENTRYPOINT ["/entrypoint.sh"]
