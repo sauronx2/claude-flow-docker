@@ -11,8 +11,14 @@ services:
 
     # Volumes for persistence
     volumes:
-      # Claude-Flow databases (AgentDB, ReasoningBank)
+      # Claude-Flow init data
       - claude-flow-db:/root/.claude-flow
+
+      # Runtime data: agents, memory.db, settings, skills
+      - claude-flow-claude:/.claude
+
+      # Swarm data: memory.db, HNSW vector index
+      - claude-flow-swarm:/.swarm
 
       # Optional: share downloaded npm packages
       - node-modules-cache:/root/.npm
@@ -27,6 +33,10 @@ services:
 # Named volumes for persistence
 volumes:
   claude-flow-db:
+    driver: local
+  claude-flow-claude:
+    driver: local
+  claude-flow-swarm:
     driver: local
   node-modules-cache:
     driver: local

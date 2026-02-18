@@ -94,6 +94,8 @@ docker run -d --name claude-flow -p 8080:8080 sauronx2/claude-flow:latest
 # With persistence (recommended)
 docker run -d --name claude-flow -p 8080:8080 \
   -v claude-flow-db:/root/.claude-flow \
+  -v claude-flow-claude:/.claude \
+  -v claude-flow-swarm:/.swarm \
   sauronx2/claude-flow:latest
 ```
 
@@ -226,9 +228,22 @@ make clean   # Remove all (including data)
 | **Image Size** | ~1.7 GB (optimized from ~3 GB) |
 | **Architectures** | `linux/amd64`, `linux/arm64` |
 | **Port** | `8080` (SSE) |
-| **Volumes** | `claude-flow-db`, `node-modules-cache` |
+| **Volumes** | `claude-flow-db`, `claude-flow-claude`, `claude-flow-swarm`, `node-modules-cache` |
 | **Restart** | `unless-stopped` |
 | **Health Check** | Every 30s on `/sse` endpoint |
+
+### Data Persistence
+
+Claude-Flow stores runtime data in three separate directories. All three must be mounted as volumes to survive container recreation:
+
+| Volume | Container Path | Contents |
+|--------|---------------|----------|
+| `claude-flow-db` | `/root/.claude-flow` | Init state, update tracker |
+| `claude-flow-claude` | `/.claude` | Agents, memory.db, settings.json, skills, commands |
+| `claude-flow-swarm` | `/.swarm` | Swarm memory.db, HNSW vector index, schema |
+| `node-modules-cache` | `/root/.npm` | npm cache (optional, speeds up updates) |
+
+> **Warning:** Without `claude-flow-claude` and `claude-flow-swarm` volumes, all agent definitions, learned patterns, and HNSW vector indexes will be lost when the container is removed.
 
 ### Image Optimization
 

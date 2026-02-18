@@ -9,6 +9,8 @@ services:
       - "8080:8080"
     volumes:
       - claude-flow-db:/root/.claude-flow
+      - claude-flow-claude:/.claude
+      - claude-flow-swarm:/.swarm
       - node-modules-cache:/root/.npm
     environment:
       - NODE_ENV=production
@@ -16,6 +18,10 @@ services:
 
 volumes:
   claude-flow-db:
+    driver: local
+  claude-flow-claude:
+    driver: local
+  claude-flow-swarm:
     driver: local
   node-modules-cache:
     driver: local

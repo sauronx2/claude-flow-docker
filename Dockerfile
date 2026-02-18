@@ -48,6 +48,11 @@ COPY --from=builder /root/.claude-flow /root/.claude-flow
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Declare volumes for runtime data persistence
+# /.claude/ — agents, memory.db, settings, skills
+# /.swarm/ — swarm memory.db, HNSW vector index
+VOLUME ["/.claude", "/.swarm", "/root/.claude-flow"]
+
 # Expose SSE port for MCP
 EXPOSE 8080
 
